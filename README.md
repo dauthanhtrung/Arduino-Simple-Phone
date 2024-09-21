@@ -1,2 +1,8 @@
 # Arduino Simple Phone
  Arduino Simple Phone for Education
+//****************************************//
+//  Code by Dau Thanh Trung
+//  Hoc Vien Ki Thuat Mat Ma
+//  Phone: 0868242509
+//  Gmail: dauthanhtrung.kma@gmail.com
+//***************************************//

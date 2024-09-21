@@ -1,0 +1,3 @@
+Layer Pairs Export File for PCB: D:\Desktop\PHONE DESIGN\KPHONE\PCB_KPHONE.PcbDoc
+LayersSetName=Top_Bot_Thru_Holes|DrillFile=pcb_kphone-roundholes.txt|DrillLayers=gtl,gbl
+LayersSetName=Top_Bot_Slot_Holes|DrillFile=pcb_kphone-slotholes.txt|DrillLayers=gtl,gbl

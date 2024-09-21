@@ -1,0 +1,14 @@
+Project Outputs Generation Report
+---------------------------------
+Start Output Generation At 01:40:31 PM On 19/9/2024
+
+Output: Bill of Materials
+Type  : BOM
+From  : Variant [[No Variations]] of Project [KPHONE.PrjPcb]
+   Generated File[BOM_KPHONE_2024-09-19.xlsx]
+
+
+Files Generated   : 1
+Documents Printed : 0
+
+Finished Output Generation At 01:40:35 PM On 19/9/2024

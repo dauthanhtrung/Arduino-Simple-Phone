@@ -1,0 +1,14 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : PCB Document [PCB_KPHONE.PcbDoc]
+   Generated File[PCB_KPHONE-RoundHoles.TXT]
+   Generated File[PCB_KPHONE-SlotHoles.TXT]
+   Generated File[PCB_KPHONE.DRL]
+   Generated File[PCB_KPHONE.LDP]
+   Generated File[PCB_KPHONE.DRR]
+
+
+Files Generated   : 5
+Documents Printed : 0
+
+Finished Output Generation At 08:03:15 PM On 20/9/2024

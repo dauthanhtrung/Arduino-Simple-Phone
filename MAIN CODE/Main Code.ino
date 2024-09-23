@@ -6,30 +6,32 @@
 //***************************************//
 #include <SPI.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_PCD8544.h>
+#include <Adafruit_PCD8544.h>	//Lcd Library
 #include <String.h>
 #include <SoftwareSerial.h>
-#include <Keypad.h> //bàn phím
+#include <Keypad.h> 		//Keypad library
 // #include <TimerOne.h>
 
 //********************************************************************************************//
 
-SoftwareSerial PHONE(3,2);// kết nối với module sim (Tx, Rx);
-Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 8); // màn hình Nokia
+SoftwareSerial PHONE(3,2);// Connect with SIM module (Tx, Rx);
+Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 8); // LCD Nokia 5110 connect pin with Arduino
                                           //SCLK,DIN,DC,SCE,RST
 
-// sơ đồ phím
+// keyboard diagram
 const byte ROWS = 4; 
 const byte COLS = 4; 
 char hexaKeys[ROWS][COLS] = {
-  {'A', 'B', 'C', 'D'},
-  {'1', '2', '3', '*'},
-  {'4', '5', '6', '#'},
-  {'7', '8', '9', '0'}
+  {'1', '2', '3', 'A'},
+  {'4', '5', '6', 'B'},
+  {'7', '8', '9', 'C'},
+  {'*', '0', '#', 'D'}
 };
-byte rowPins[ROWS] = {9, 10, 11, 12};  //Hàng
-byte colPins[COLS] = {A0, A1, A2, A3}; //Cột
-Keypad key = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); // khởi tạo phím
+/* A-OK; B-UP; C-DOWN; D-BACK*/
+
+byte rowPins[ROWS] = {12, 11, 10, 9};  //Rows
+byte colPins[COLS] = {A3, A2, A1, A0}; //Cols
+Keypad key = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); // Init Keypad
 
 //********************************************************************************************//
 
@@ -41,9 +43,9 @@ unsigned char page = 0;
 int count=0;
 
 //********************************************************************************************//
-// Các biến sử dụng
+// Variables used
 String number="";
-String NUMBER=""; // số điện thoại
+String NUMBER=""; // number phone
 String msg="";
 String instr="";
 String str_sms="";
@@ -68,7 +70,7 @@ char sms_num[3];
 int rec_read=0;
 int temp1=0;
 
-String ch="1,.?!@abc2def3ghi4jkl5mno6pqrs7tuv8wxyz90 "; // Mã viết tin nhắn
+String ch="1,.?!@abc2def3ghi4jkl5mno6pqrs7tuv8wxyz90*# "; // Code for message
 
 unsigned long real_time;  
 unsigned char t=0;
@@ -76,15 +78,15 @@ unsigned char contrast=50;
 char myKey;
 
 //********************************************************************************************//
-#define LIGHT 13
-#define BUZZER 0
-#define LED_LCD 1
+#define LIGHT A5	//Connect pin
+#define BUZZER 13
+#define LED_LCD A4
 
 
-static const unsigned char PROGMEM tim[] = // biểu tượng sóng
+static const unsigned char PROGMEM tim[] = // Phone wave icon
 { 0x00,0x6C,0xFE,0xFE,0x7C,0x38,0x10,0x00};
 // 'lock', 84x48px
-const unsigned char LOCK [] PROGMEM = {
+const unsigned char LOCK [] PROGMEM = { // Lock icon
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -121,7 +123,7 @@ const unsigned char LOCK [] PROGMEM = {
 };
 
 
-static const unsigned char PROGMEM viettel[] = // biểu tượng sóng
+static const unsigned char PROGMEM viettel[] = // Network provider icon
 { B00000000, B00000000,
   B00000000, B00000000,
   B00000001, B00000000,
@@ -138,7 +140,7 @@ static const unsigned char PROGMEM viettel[] = // biểu tượng sóng
   B00000000, B00000000,
   B00000000, B00000000,
   B00000000, B00000000 };
-static const unsigned char PROGMEM battery_icon[] =  // biểu tượng pin
+static const unsigned char PROGMEM battery_icon[] =  // Battery icon
 { B00000000, B00000000,
   B01111111, B11000000,
   B01000000, B01000000,
@@ -156,7 +158,7 @@ static const unsigned char PROGMEM battery_icon[] =  // biểu tượng pin
   B00000000, B00000000,
   B00000000, B00000000 };
 
-static const unsigned char PROGMEM message_icon[] =  // biểu tượng pin
+static const unsigned char PROGMEM message_icon[] =  // Message icon
 { B11111111, B11111000,
   B10100000, B00101000,
   B10010000, B01001000,
@@ -175,42 +177,42 @@ static const unsigned char PROGMEM message_icon[] =  // biểu tượng pin
   B00000000, B00000000 };
 
 void setup() {
-  pinMode(LED_LCD,OUTPUT);  //Đèn nên cho LCD
-  pinMode(LIGHT,OUTPUT);    //Đèn pin
-  pinMode(BUZZER,OUTPUT);   //Còi chíp
+  pinMode(LED_LCD,OUTPUT);  //Backlight for LCD
+  pinMode(LIGHT,OUTPUT);    //Light
+  pinMode(BUZZER,OUTPUT);   //Buzzer
 
   digitalWrite(LED_LCD,LOW);
   digitalWrite(LIGHT,LOW);
   digitalWrite(BUZZER,LOW);
-  // Timer1.initialize(1000000); //Khởi động ngắt, thời gian đặt cho nó là 1s.
-  // Timer1.attachInterrupt(GetTime); //Khi xảy ra ngắt chương trình sẽ gọi hàm blinkLED().
+  // Timer1.initialize(1000000); //Init interrupt
+  // Timer1.attachInterrupt(GetTime);
   real_time = millis();
   // Serial.begin(9600);
-  //KHỞI TẠO MÀN HÌNH
+  //Init LCD
   display.begin();      
   // display.setContrast(50); //Set contrast to 50
   display.setContrast(contrast);
   display.display();
   display.clearDisplay(); 
   display.display(); 
-  //KHỞI TẠO MODULE SIM
+  //Init SIM module
   PHONE.begin(9600);
   gsm_init();
   
   // delay(2000);
 }
 
-void loop() {
-  if( (millis() - real_time) >10000 ){
+void loop() { //Main program
+  if( (millis() - real_time) >10000 ){ // get time from network
     real_time = millis();
     GetTime();
   }
-  serialEvent(); // Kiểm tra tin nhắn và cuộc gọi đến
-  myKey = key.getKey();//kiểm tra nút nhấn liên tục
-  drawMenu(); // MÀN HÌNH CHÍNH
+  serialEvent(); // Check message and calling
+  myKey = key.getKey();//Check button keypad
+  drawMenu(); // Main Home
   
-  // Xử lí sự kiện cuộc gọi và tin nhắn đến
-  if(ring == 1){ // phát hiện có cuộc gọi đến
+  // Handling incoming call and message events
+  if(ring == 1){ // Incoming call detected
     while(ring==1)
     {
      
@@ -220,38 +222,38 @@ void loop() {
       // page=0;
       // break;
     }
-    instr=""; i=0;// reset trạng thái
+    instr=""; i=0;// reset state
     GetTime();
     delay(500);
   }
-  //*****************************Nhận tin nhắn********************************//
+  //*****************************Get message********************************//
   // if(sms_flag==1){
   //   while(sms_flag==1)
   //   {
   //     display.clearDisplay();
   //     str_sms=instr;
   //     int loc=instr.indexOf("+CMT: \"");
-  //     number=instr.substring(loc+7,loc+19); // Tách số điện thoại
+  //     number=instr.substring(loc+7,loc+19); // Split phone number
 
   //     int L1=str_sms.indexOf("+CMT: \"");
   //     int L2 = str_sms.length();
-  //     str_sms_2=str_sms.substring(L1,L2); // Tách phần nội dung
+  //     str_sms_2=str_sms.substring(L1,L2); // Split content
 
   //     int L3=str_sms_2.indexOf("\"\r\n");
   //     int L4=str_sms_2.length();
-  //     str_sms_3=str_sms_2.substring(L3+3,L4); // Tách lấy tin nhắn
+  //     str_sms_3=str_sms_2.substring(L3+3,L4); // Extract message content
   //     String sms = str_sms_3; 
   //     display.setCursor(0,10);
-  //     display.print(number); // số điện thoại
+  //     display.print(number); // Get phone number
   //     display.setCursor(0,20);
   //     display.print("<");
-  //     display.print(str_sms_3); // tin nhắn mới
-  //     display.print("Noi dung: "); // tin nhắn mới
+  //     display.print(str_sms_3); // New message
+  //     display.print("Noi dung: "); // New message
   //     display.print(">");
   //     display.display();
   //     delay(5000);
   //     page_9();
-  //     // instr=""; // Reset các biến
+  //     // instr=""; // Reset state
   //     str_sms="";
   //     str_sms_2="";
   //     str_sms_3="";
@@ -265,7 +267,7 @@ void loop() {
   // }
  
 
-  //KHÓA MÀN HÌNH
+  //Lock screen by button '0'
   if (myKey=='0')
   {
     if (page == 0){
@@ -275,8 +277,8 @@ void loop() {
       page=0;
     }
   }
-  // THAY ĐỔI CÁC BIẾN ITEM VÀ PAGE
-  //Nút OK
+  // Change menu and variable
+  //Button OK
   if (myKey=='A')
   {
     if (page == 1 && menu_item==3) 
@@ -315,7 +317,7 @@ void loop() {
       page_5();
     }
   }
-  //Nút up
+  //Button up
   if (myKey=='B')
   {
     if (page == 0){
@@ -340,7 +342,7 @@ void loop() {
     }
   }
 
-//nút down
+//Button down
   if (myKey=='C')
   {
     if (page == 0){
@@ -366,7 +368,7 @@ void loop() {
   }
   
 
-   //Nút quay lại
+   //Button Back
    if (myKey=='D') //BACK
    { 
     if (page == 1 )
@@ -398,7 +400,7 @@ void NhapSDT()
 {
   count=0;
   NUMBER="";
-  while(1) // luôn đúng, chỉ bấm gửi mới thoát khỏi vòng lặp
+  while(1) // true
   {
     char myKey = key.getKey();
     display.setTextSize(1);
@@ -475,26 +477,26 @@ void NhapSDT()
       count++;
     }
 
-    if(myKey=='A' && page == 2)// xử lí nút gọi điện
+    if(myKey=='A' && page == 2)// call button handle
     {
       NUMBER.remove(0,1);
-      // lệnh thực hiện cuộc gọi ở đây
-      PHONE.print("ATD+ +84");
+      // Call command here
+      PHONE.print("ATD+ +84"); // change your country code here
       PHONE.print(NUMBER);
       PHONE.println(";");
       delay(100);
       //******************************//
-      page=6; // gọi điện
+      page=6; // calling
       break;
     }
-    if(myKey=='A' && page == 3)// xử lí nút gửi tin nhắn
+    if(myKey=='A' && page == 3)// handle send message button
     {
       NUMBER.remove(0,1);
-      page=4; // chọn tin nhắn
+      page=4; // choose message
       break;
     }
      
-    if(myKey=='D') // xử lí nút xóa + quay lại
+    if(myKey=='D') // button Delete and back
      {
         count--;
         NUMBER.remove(count);
@@ -520,7 +522,7 @@ void NhapSDT()
     display.display();
   }
 }
-//********************Nhập tin nhắn để gửi***********************//
+//********************Enter message to send***********************//
 void NhapTinNhan()
 {
   int x=0,y=0,num=0;
@@ -528,7 +530,7 @@ void NhapTinNhan()
   while(1)
   {
     char myKey=key.getKey();
-      // Nhập dữ liệu
+      // Enter data
        if(myKey=='1')
        {
          num=0;
@@ -839,7 +841,7 @@ void NhapTinNhan()
          msg+=ch[num];
         }
 
-        // Phím chức năng
+        // Function button
         else if(myKey=='D')
         {
           x--;msg.remove(x);
@@ -874,7 +876,7 @@ void NhapTinNhan()
           }
     }
 }
-//***********************Đọc Tin Nhắn Đến********************//
+//***********************Read Incoming Messages********************//
 void DocTinNhan()
 {
   display.clearDisplay();
@@ -886,7 +888,7 @@ void DocTinNhan()
   delay(2000);
   // PHONE.print("AT+CMGR=");
   // PHONE.println(sms_num);
-  // PHONE.print("AT+CMGR=1<CR><LF>");delay(100); //lưu tin nhan vào bộ nhớ
+  // PHONE.print("AT+CMGR=1<CR><LF>");delay(100); //Save message to memory
 
   // str_sms="Dau Thanh Trung";
   // int l1=str_sms.indexOf("\"\r\n");
@@ -901,14 +903,14 @@ void DocTinNhan()
   display.display();
   delay(5000);
 }
-//*********************Vẽ màn hình menu********************//
+//*********************Draw menu display********************//
 void drawMenu()
 { 
     if (page==1) 
     {    
-      page_1();//Hiển thị lựa chọn
+      page_1();//Show selection
     }
-    else if (page==2) //thực hiện chọn lệnh
+    else if (page==2) //execute command
     {
       page_2();    
     }
@@ -950,12 +952,12 @@ void drawMenu()
     }
 }
 
-//****************************Màn hình chờ + Hiển thị nhiệt độ**********************//
+//****************************Standby screen + Temperature display**********************//
 void page_0(){
     display.setTextSize(1);
     display.clearDisplay();
-    display.drawBitmap(0, 0,  viettel, 16, 16, 1); // vẽ logo
-    display.drawBitmap(72, 0,  battery_icon, 16, 16, 1); // vẽ logo
+    display.drawBitmap(0, 0,  viettel, 16, 16, 1); // draw logo
+    display.drawBitmap(72, 0,  battery_icon, 16, 16, 1); // draw logo
     display.setTextColor(BLACK,WHITE);
     display.setCursor(10, 1);
     display.print("Viettel");
@@ -981,12 +983,12 @@ void page_0(){
     display.setCursor(40, 40);
     display.print(contrast);
 
-    display.drawBitmap(70, 40,  message_icon, 16, 16, 1); // vẽ logo
+    display.drawBitmap(70, 40,  message_icon, 16, 16, 1); // draw logo
 
     display.display();
     
 }
-//****************************Màn hình MENU**********************//
+//****************************Display MENU**********************//
 void page_1(){
   display.setTextSize(1);
   display.clearDisplay();
@@ -1041,7 +1043,7 @@ void page_1(){
   display.display();
   display.clearDisplay();
 }
-//****************************Màn hình gọi điện**********************//
+//****************************Display Calling**********************//
 void page_2(){
   display.setTextSize(1);
   //display.clearDisplay();
@@ -1065,7 +1067,7 @@ void page_2(){
 
   NhapSDT();
 }
-//****************************Màn hình gửi tin nhắn**********************//
+//****************************Display send message**********************//
 void page_3(){
   display.setTextSize(1);
   //display.clearDisplay();
@@ -1073,7 +1075,7 @@ void page_3(){
   display.fillRect(0, 0, 83, 9, BLACK);
   display.setCursor(18, 1);
   display.print("MESSAGE");
-  //display.drawFastHLine(0,10,83,BLACK); // vẽ nhanh đường thẳng;
+  //display.drawFastHLine(0,10,83,BLACK);
   display.setTextColor(BLACK,WHITE);
   display.setTextSize(1);
   display.setCursor(0, 12);
@@ -1089,8 +1091,8 @@ void page_3(){
   display.display();
   NhapSDT();
 }
-//****************************Màn hình chọn tin nhắn để gửi**********************//
-void page_4(){ // Nhập tin nhắn để gửi
+//****************************Screen to select message to send**********************//
+void page_4(){ 
   display.setTextSize(1);
   display.clearDisplay();
   display.setTextColor(WHITE,BLACK);
@@ -1109,7 +1111,7 @@ void page_4(){ // Nhập tin nhắn để gửi
   NhapTinNhan();
 
 }
-void page_5() // HÀNH ĐỘNG GỬI TIN NHẮN ĐƯỢC CHỌN
+void page_5() // Send selected message
 {
   display.clearDisplay();
   display.setTextColor(BLACK);
@@ -1117,10 +1119,10 @@ void page_5() // HÀNH ĐỘNG GỬI TIN NHẮN ĐƯỢC CHỌN
   display.setCursor(5, 0);
   display.print("DA GUI TIN");
   display.drawFastHLine(0,8,83,BLACK);
-  //Lệnh gửi tin nhắn
+  //Send SMS command
   PHONE.println("AT+CMGF=1"); // Configuring TEXT mode
   delay(200);
-  PHONE.print("AT+CMGS=\"+84");
+  PHONE.print("AT+CMGS=\"+84"); // change your country code here
   PHONE.print(NUMBER);
   PHONE.println("\"");
   delay(200);
@@ -1134,7 +1136,7 @@ void page_5() // HÀNH ĐỘNG GỬI TIN NHẮN ĐƯỢC CHỌN
   display.clearDisplay();
   page=0;
 }
-void page_6() // ĐANG GỌI ĐIỆN
+void page_6() // Calling
 {
   
   display.clearDisplay();
@@ -1157,7 +1159,7 @@ void page_6() // ĐANG GỌI ĐIỆN
     str1="";
     if(myKey == 'D')
     {
-      PHONE.println("ATH"); // lệnh kết thúc cuộc gọi
+      PHONE.println("ATH"); // end call command
       delay(1000);
       ans=0;
       break;
@@ -1174,7 +1176,7 @@ void page_6() // ĐANG GỌI ĐIỆN
       }
     }
   } 
-  page=0; // về màn hình chính
+  page=0; // return home screen
 }
 
 void page_7()
@@ -1208,7 +1210,7 @@ void page_7()
     str1="";
     if(myKey == 'A')
     {
-      PHONE.println("ATA"); // Chấp nhận cuộc gọi
+      PHONE.println("ATA"); // Accept call
       delay(500);
       page=6;
       ans=0;
@@ -1216,7 +1218,7 @@ void page_7()
     }
     if(myKey == 'D')
     {
-      PHONE.println("ATH"); // lệnh kết thúc cuộc gọi
+      PHONE.println("ATH"); // end call command
       delay(500);
       ans=0;
       page=0;
@@ -1237,7 +1239,7 @@ void page_7()
   } 
 
 }
-void page_8() // Hộp thư đến
+void page_8() // Inbox
 {
   display.setTextSize(1);
   display.clearDisplay();
@@ -1252,12 +1254,12 @@ void page_8() // Hộp thư đến
   display.print("BACK");
   display.display();
 
-  //Nội dung tin nhắn ở đây
+  //Message content here
 
 
   //******************************************//
 }
-void page_9() // Hộp thư đến
+void page_9() // Inbox
 {
   display.setTextSize(1);
   display.clearDisplay();
@@ -1270,7 +1272,7 @@ void page_9() // Hộp thư đến
   display.print("BACK");
   display.display();
 
-  //Nội dung tin nhắn ở đây
+  //Message content here
   display.setCursor(0, 10);
   display.print(sms);
   display.display();
@@ -1280,7 +1282,7 @@ void page_9() // Hộp thư đến
   display.clearDisplay();
   
 }
-void page_99()//Màn hình khóa
+void page_99()//Lock screen
 {
   display.clearDisplay();
 	display.drawBitmap(0, 0,  LOCK, 84, 48, BLACK);
@@ -1358,7 +1360,7 @@ void gsm_init()
   display.setCursor(8, 8);
   display.print("DONE");
 
-  // PHONE.print("AT+CMGF=1");delay(100); //cấu hình chế độ văn bản
+  // PHONE.print("AT+CMGF=1");delay(100); //text mode configuration
   PHONE.println("AT+CLIP=1"); delay(100);
   // PHONE.println("ATM 9"); delay(100);
   // PHONE.println("AT+CLVL=100");delay(100);
@@ -1370,7 +1372,7 @@ void gsm_init()
   GetTime();
 }
 void GetTime(){ 
-  PHONE.println("AT+CCLK?"); //nhận ngày giờ
+  PHONE.println("AT+CCLK?"); //get date and time
   delay(50);
   while(PHONE.available()){
     char ch=PHONE.read();
@@ -1389,7 +1391,7 @@ void GetTime(){
   //+CCLK: "21/08/05,19:28:10+28"
 }
 
-void serialEvent()// có cuộc gọi hoặc tin nhắn đến, dùng ngắt để xử lí
+void serialEvent()// There is an incoming call or message, use interrupt to handle it.
 {
   while(PHONE.available())
   {
@@ -1399,7 +1401,7 @@ void serialEvent()// có cuộc gọi hoặc tin nhắn đến, dùng ngắt đ�
 
     if(instr[i-4] == 'R' && instr[i-3] == 'I' && instr[i-2] == 'N' && instr[i-1] == 'G' )
     {
-       ring=1; // có cuộc gọi đến
+       ring=1; // there is an incoming call
     }
 
     if(instr.indexOf("NO CARRIER")>=0)
@@ -1409,7 +1411,7 @@ void serialEvent()// có cuộc gọi hoặc tin nhắn đến, dùng ngắt đ�
     }
     if(instr.indexOf("+CMT:")>=0)
     {
-      sms_flag=1;   // có tin nhắn đến
+      sms_flag=1;   // have message
     }
   }
 }

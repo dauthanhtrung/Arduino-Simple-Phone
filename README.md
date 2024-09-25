@@ -19,4 +19,5 @@ https://www.instructables.com/preview/EZ82EAPM17VI877/
 ## Screenshots
 
 ![App Screenshot](https://i.ibb.co/GPn3kq3/i-n-tho-i-Arduino-Phone-3.png)
-
+![App Screenshot](https://i.ibb.co/PDjm9FK/i-n-tho-i-Arduino-Phone-6.png)
+![App Screenshot](https://i.ibb.co/37NZHxt/i-n-tho-i-Arduino-Phone-7.png)
